@@ -30,7 +30,7 @@ if os.path.exists('.notebook'):
 else:
 	bottleneck_tensor_size =  2048
 	BATCH_SIZE = 10
-	DISPLAY_INTERVAL, NUM_ITERS = 10, 5000
+	DISPLAY_INTERVAL, NUM_ITERS = 100, 50000
 
 data_file = "dump.gz"
 f = gzip.open(data_file, 'rb')
@@ -195,7 +195,7 @@ with graph.as_default():
 		sess.run(init)	# Randomly initialize weights.
 		for iteration in range(NUM_ITERS):			  # Train iteratively for NUM_iterationS.		 
 
-			if iteration % (50*DISPLAY_INTERVAL) == 0:
+			if iteration % (100*DISPLAY_INTERVAL) == 0:
 
 				#output_values = output.eval(feed_dict = {x:train['images'][:3]})
 				#print('train: {0:.2f} - {1:.2f}'.format(output_values[0][0]*360, train['labels'][0][0]*360))
@@ -218,7 +218,7 @@ with graph.as_default():
 				print(output_angles_valid[:max(len(valid),10)])
 
 
-			if iteration % (5*DISPLAY_INTERVAL) == 0:
+			if iteration % (10*DISPLAY_INTERVAL) == 0:
 
 				train_accuracy = np.mean( [loss.eval( \
 					feed_dict={x:train['images'][i*BATCH_SIZE:(i+1)*BATCH_SIZE], \
