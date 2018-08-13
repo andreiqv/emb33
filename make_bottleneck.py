@@ -76,7 +76,6 @@ def covert_data_to_feature_vector(data):
 def create_bootleneck_data(dir_path, shape):
 	""" Calculate feature vectors for rotated images using TF.
 	"""
-
 	files = os.listdir(dir_path)
 	random.shuffle(files)
 	feature_vectors = []
