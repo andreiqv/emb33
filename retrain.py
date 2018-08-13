@@ -30,7 +30,7 @@ if os.path.exists('.notebook'):
 else:
 	bottleneck_tensor_size =  2048
 	BATCH_SIZE = 10
-	DISPLAY_INTERVAL, NUM_ITERS = 100, 50000
+	DISPLAY_INTERVAL, NUM_ITERS = 100, 500000
 
 data_file = "dump.gz"
 f = gzip.open(data_file, 'rb')
