@@ -119,12 +119,13 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 			a = d*math.sqrt(2)
 			area = (cx - a/2, cy - a/2, cx + a/2, cy + a/2)
 
-			d_angle = int(360 / num_angles)
+			d_angle = 360 / num_angles
+			print('d_angle =', d_angle)
 			
 			for i in range(0, num_angles):
 
 				#angle = i*30 + randint(0,29)				
-				angle = i * d_angle + randint(0, 100*(d_angle-1)) / 100
+				angle = i * d_angle + randint(0, int(100*(d_angle))-1 ) / 100
 				print('{0}/{1} - {2}: {3:.2f} deg.'.format(index_file+1, num_files, i, angle))
 
 				img_rot = img.rotate(angle)
