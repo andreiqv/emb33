@@ -26,15 +26,13 @@ else:
 np.set_printoptions(precision=4, suppress=True)
 #import tensorflow_hub as hub
 
-
+"""
 def load_data(in_dir, image_size):	
-	""" each image has form [height, width, 3]
-	"""
+	# each image has form [height, width, 3]
+	
 
 	data = dict()
-	data['filenames'] = []
-	data['images'] = []
-	data['labels'] = []
+	data['images'], data['labels'], data['filenames'] = [], [], []
 
 	files = os.listdir(in_dir)
 	random.shuffle(files)
@@ -64,9 +62,20 @@ def load_data(in_dir, image_size):
 		data['labels'].append(lable)
 		data['filenames'].append(file_name)
 
+	# mix data
+	print('mix data')
+	zip3 = list(zip(data['images'], data['labels'], data['filenames']))
+	random.shuffle(zip3)
+	data['images']    = [x[0] for x in zip3]
+	data['labels']    = [x[1] for x in zip3]
+	data['filenames'] = [x[2] for x in zip3]
+
+	for i in range(data['labels']):
+		print('{0}' - '{1}'.format(data['labels'], data['filenames']))
 
 	return data
 	#return train, valid, test
+"""
 
 """
 def covert_data_to_feature_vector(data):
@@ -84,12 +93,17 @@ def covert_data_to_feature_vector(data):
 
 def create_bootleneck_data(dir_path, shape, num_angles):
 	""" Calculate feature vectors for rotated images using TF.
+	Returns:
+	data : dict {'images':  [list of feature_vectors], 
+				 'labels':  [list of labels], 
+				 'filenames': [list of file names]}
+		where 
 	"""
 	image_size = (shape[0], shape[1])
 	feature_vectors, labels, filenames = [], [], []
 
 	files = os.listdir(dir_path)
-	random.shuffle(files)
+	#random.shuffle(files)
 	num_files = len(files)
 
 	# Calculate in TF
@@ -141,8 +155,22 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 
 			img.close()
 
-	print('Number of feature_vectors: {0}'.format(len(feature_vectors)))	
-	return {'images': feature_vectors, 'labels': labels, 'filenames':filenames}
+	print('Number of feature_vectors: {0}'.format(len(feature_vectors)))
+	
+	data = {'images': feature_vectors, 'labels': labels, 'filenames':filenames}
+
+	# mix data
+	print('mix data')
+	zip3 = list(zip(data['images'], data['labels'], data['filenames']))
+	random.shuffle(zip3)
+	data['images']    = [x[0] for x in zip3]
+	data['labels']    = [x[1] for x in zip3]
+	data['filenames'] = [x[2] for x in zip3]
+
+	for i in range(len(data['labels'])):
+		print('{0} - {1}'.format(data['labels'][i], data['filenames'][i]))
+
+	return data
 
 
 def make_bottleneck_dump(in_dir, shape, num_angles):
@@ -178,6 +206,6 @@ if __name__ == '__main__':
 	in_dir = 'data'
 	out_file = 'dump.gz'
 	shape = 224, 224, 3
-	num_angles = 500
+	num_angles = 50
 	bottleneck_data = make_bottleneck_dump(in_dir=in_dir, shape=shape, num_angles=num_angles)
 	save_data_dump(bottleneck_data, out_file=out_file)
