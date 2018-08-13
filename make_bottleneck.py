@@ -8,6 +8,8 @@ from PIL import Image, ImageDraw
 import _pickle as pickle
 import gzip
 import random
+from random import randint
+import math
 import numpy as np
 
 import tensorflow as tf
@@ -18,7 +20,7 @@ np.set_printoptions(precision=4, suppress=True)
 #import tensorflow_hub as hub
 
 
-def load_data(in_dir, img_size):	
+def load_data(in_dir, image_size):	
 	""" each image has form [height, width, 3]
 	"""
 
@@ -37,7 +39,7 @@ def load_data(in_dir, img_size):
 		#img_gray = Image.open(file_path).convert('L')
 		#img = img_gray.resize(img_size, Image.ANTIALIAS)
 		img = Image.open(file_path)
-		img = img.resize(img_size, Image.ANTIALIAS)
+		img = img.resize(image_size, Image.ANTIALIAS)
 		arr = np.array(img, dtype=np.float32) / 256
 
 		name = ''.join(file_name.split('.')[:-1])
@@ -73,13 +75,14 @@ def covert_data_to_feature_vector(data):
 #--------------------
 
 
-def create_bootleneck_data(dir_path, shape):
+def create_bootleneck_data(dir_path, shape, num_angles):
 	""" Calculate feature vectors for rotated images using TF.
 	"""
+	image_size = (shape[0], shape[1])
+
 	files = os.listdir(dir_path)
 	random.shuffle(files)
-	feature_vectors = []
-	lables = []
+	feature_vectors, labels, filenames = [], [], []
 
 	# Calculate in TF
 	height, width, color =  shape
@@ -87,7 +90,9 @@ def create_bootleneck_data(dir_path, shape):
 	resized_input_tensor = tf.reshape(x, [-1, height, width, 3])
 	#module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/classification/1")		
 	#module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/1")
-	module = lambda x: network.perceptron(x, shape=shape, output_size=2048)
+	
+	#module = lambda x: network.perceptron(x, shape=shape, output_size=2048)
+	module = network.conv_network_224
 
 		# num_features = 2048, height x width = 224 x 224 pixels
 	assert height, width == hub.get_expected_image_size(module)	
@@ -101,7 +106,7 @@ def create_bootleneck_data(dir_path, shape):
 		for file in files:
 
 			print(file)
-			file_path = dir_path + '/' + file_name
+			file_path = dir_path + '/' + file
 			img = Image.open(file_path)			
 
 			sx, sy = img.size
@@ -110,39 +115,47 @@ def create_bootleneck_data(dir_path, shape):
 			a = d*math.sqrt(2)
 			area = (cx - a/2, cy - a/2, cx + a/2, cy + a/2)
 
-			for i in range(0, 12):
+			d_angle = int(360 / num_angles)
+			
+			for i in range(0, num_angles):
 
-				angle = i*30 + randint(0,29)
-				print('rotate {0} gradus'.format(angle))
+				#angle = i*30 + randint(0,29)				
+				angle = i * d_angle + randint(0, d_angle-1)
+				print('{0}: rotate of {1} degrees'.format(i, angle))
 
 				img_rot = img.rotate(angle)
 				box = img_rot.crop(area)
-				box = box.resize(img_size, Image.ANTIALIAS)
+				box = box.resize(image_size, Image.ANTIALIAS)
 				arr = np.array(box, dtype=np.float32) / 256
-				lable = np.array([float(angle) / 360.0], dtype=np.float64)
+				label = np.array([float(angle) / 360.0], dtype=np.float64)
 				
-				feature_vector = bottleneck_tensor.eval(feed_dict={ x : arr })
+				feature_vector = bottleneck_tensor.eval(feed_dict={ x : [arr] })
 				feature_vectors.append(feature_vector)
-				lables.append(lable)
+				labels.append(label)
+				filenames.append(file_path)
 
-	print(len(embedding))				
-	return embedding
+	print('Number of feature_vectors: {0}'.format(len(feature_vectors)))	
+	return {'images': feature_vectors, 'labels': labels, 'filenames':filenames}
 
 
-def make_bottleneck_dump(in_dir, out_file, shape):
+def make_bottleneck_dump(in_dir, shape, num_angles):
 
 	bottleneck_data = dict()
 	parts = ['train', 'valid', 'test']
 	for part in parts:
-		part_dir = in_dir + '/' + part		
-		bottleneck_data[part] = create_bootleneck_data(part_dir, shape)
+		print('\nProcessing {0} data'.format(part))
+		part_dir = in_dir + '/' + part
+		bottleneck_data[part] = create_bootleneck_data(part_dir, shape, num_angles)
 
-	print(len(bottleneck_data['images']))
-	print(len(bottleneck_data['labels']))
+	print(len(bottleneck_data['train']['images']))
+	print(len(bottleneck_data['train']['labels']))
 
+	return bottleneck_data
+
+
+def save_data_dump(data, out_file):
 	
 	# save the data on a disk
-	"""
 	dump = pickle.dumps(bottleneck_data)
 	print('dump done')
 	f = gzip.open(out_file, 'wb')
@@ -150,11 +163,14 @@ def make_bottleneck_dump(in_dir, out_file, shape):
 	f.write(dump)
 	print('dump was written')
 	f.close()
-	"""
+
+
 
 if __name__ == '__main__':
 
 	in_dir = 'data'
 	out_file = 'dump.gz'
 	shape = 224, 224, 3
-	make_bottleneck_dump(in_dir=in_dir, out_file=out_file, shape=shape)
+	num_angles = 10
+	bottleneck_data = make_bottleneck_dump(in_dir=in_dir, shape=shape, num_angles=num_angles)
+	save_data_dump(bottleneck_data, out_file=out_file)

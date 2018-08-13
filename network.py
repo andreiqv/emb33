@@ -29,10 +29,36 @@ def perceptron(x, shape, output_size):
 	return f1
 
 
-def conv_network_1(x_image):
 
+def conv_network_224(x_image):
+
+	# input 224 x 224 x 3
+	num_color = 3
+
+	p1 = convPoolLayer(x_image, kernel=(5,5), pool_size=2, num_in=num_color, num_out=6, 
+		func=tf.nn.relu, name='1') # 112 x 112
+	p2 = convPoolLayer(p1, kernel=(5,5), pool_size=2, num_in=6, num_out=6, 
+		func=tf.nn.relu, name='2')  # 56 x 56
+	p3 = convPoolLayer(p2, kernel=(4,4), pool_size=2, num_in=6, num_out=6, 
+		func=tf.nn.relu, name='3')   # 28 x 28
+	p4 = convPoolLayer(p3, kernel=(3,3), pool_size=2, num_in=6, num_out=6, 
+		func=tf.nn.relu, name='4')   # 14 x 14
+	p5 = convPoolLayer(p4, kernel=(3,3), pool_size=2, num_in=6, num_out=12, 
+		func=tf.nn.relu, name='5')   # 7 x 7
+
+	# fully-connected layers
+	fullconn_input_size = 7*7*12 #= 588
+	p_flat = tf.reshape(p5, [-1, fullconn_input_size])
+
+	return p_flat
+
+
+
+def conv_network_1(x_image):	
+
+	num_color = 1
 	# conv layers
-	p1 = convPoolLayer(x_image, kernel=(5,5), pool_size=3, num_in=1, num_out=16, 
+	p1 = convPoolLayer(x_image, kernel=(5,5), pool_size=3, num_in=num_color, num_out=16, 
 		func=tf.nn.relu, name='1') # 180 x 180
 	p2 = convPoolLayer(p1, kernel=(5,5), pool_size=3, num_in=16, num_out=16, 
 		func=tf.nn.relu, name='2')  # 60 x 60 
