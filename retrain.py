@@ -151,6 +151,8 @@ def network2(input_tensor, input_size, hidden_num=512):
 	return f2
 
 
+neural_network = network1
+
 #-------------------
 
 # Create a new graph
@@ -165,7 +167,7 @@ with graph.as_default():
 	
 	input_bottleneck = tf.reshape(x, [-1, bottleneck_tensor_size])
 
-	output = network1(input_bottleneck, bottleneck_tensor_size)
+	output = neural_network(input_bottleneck, bottleneck_tensor_size)
 	print('output =', output)
 
 	# 2. Add nodes that represent the optimization algorithm.

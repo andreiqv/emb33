@@ -160,15 +160,17 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 	data = {'images': feature_vectors, 'labels': labels, 'filenames':filenames}
 
 	# mix data
-	print('mix data')
+	print('start mix data')
 	zip3 = list(zip(data['images'], data['labels'], data['filenames']))
 	random.shuffle(zip3)
+	print('mix ok')
 	data['images']    = [x[0] for x in zip3]
 	data['labels']    = [x[1] for x in zip3]
 	data['filenames'] = [x[2] for x in zip3]
+	print('data ready')
 
-	for i in range(len(data['labels'])):
-		print('{0} - {1}'.format(data['labels'][i], data['filenames'][i]))
+	#for i in range(len(data['labels'])):
+	#	print('{0} - {1}'.format(data['labels'][i], data['filenames'][i]))
 
 	return data
 
@@ -206,6 +208,6 @@ if __name__ == '__main__':
 	in_dir = 'data'
 	out_file = 'dump.gz'
 	shape = 224, 224, 3
-	num_angles = 50
+	num_angles = 100
 	bottleneck_data = make_bottleneck_dump(in_dir=in_dir, shape=shape, num_angles=num_angles)
 	save_data_dump(bottleneck_data, out_file=out_file)
