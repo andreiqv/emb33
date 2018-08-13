@@ -124,8 +124,8 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 			for i in range(0, num_angles):
 
 				#angle = i*30 + randint(0,29)				
-				angle = i * d_angle + randint(0, d_angle-1)
-				print('{0}/{1} - {2}: {3} deg.'.format(index_file+1, num_files, i, angle))
+				angle = i * d_angle + randint(0, 100*(d_angle-1)) / 100
+				print('{0}/{1} - {2}: {3:.2f} deg.'.format(index_file+1, num_files, i, angle))
 
 				img_rot = img.rotate(angle)
 				box = img_rot.crop(area)
@@ -177,6 +177,6 @@ if __name__ == '__main__':
 	in_dir = 'data'
 	out_file = 'dump.gz'
 	shape = 224, 224, 3
-	num_angles = 10
+	num_angles = 500
 	bottleneck_data = make_bottleneck_dump(in_dir=in_dir, shape=shape, num_angles=num_angles)
 	save_data_dump(bottleneck_data, out_file=out_file)
