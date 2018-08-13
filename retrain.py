@@ -8,7 +8,7 @@ in
 # export CUDA_VISIBLE_DEVICES=1
 
 from __future__ import absolute_import,  division, print_function
-import tensorflow as tf
+import os
 import sys
 import math
 import numpy as np
@@ -18,12 +18,19 @@ np.set_printoptions(precision=4, suppress=True)
 import _pickle as pickle
 import gzip
 
+import tensorflow as tf
 #import tensorflow_hub as hub
 
 from rotate_images import *
 
-BATCH_SIZE = 16
-NUM_ITERS = 500000
+if os.path.exists('.notebook'):
+	bottleneck_tensor_size =  588
+	BATCH_SIZE = 3
+	DISPLAY_INTERVAL, NUM_ITERS = 1, 50
+else:
+	bottleneck_tensor_size =  2048
+	BATCH_SIZE = 10
+	DISPLAY_INTERVAL, NUM_ITERS = 10, 5000
 
 data_file = "dump.gz"
 f = gzip.open(data_file, 'rb')
@@ -34,19 +41,25 @@ data = pickle.load(f)
 train = data['train']
 valid = data['valid']
 test  = data['test']
-train_data = train['embedding']
-valid_data = valid['embedding']
-test_data = test['embedding']
+#train_data = train['embedding']
+#valid_data = valid['embedding']
+#test_data = test['embedding']
+train_data = train['images']
+valid_data = valid['images']
+test_data = test['images']
 train_labels = train['labels']
 valid_labels = valid['labels']
 test_labels = test['labels']
+train['size'] = len(train['labels'])
+valid['size'] = len(valid['labels'])
+test['size'] = len(test['labels'])
 
-print('train size:', train['size'])
-print('valid size:', valid['size'])
-print('test size:', test['size'])
-im0 = train_data[0]
+print('train size:', len(train['labels']))
+print('valid size:', len(valid['labels']))
+print('test size:', len(valid['labels']))
 print('Data was loaded.')
-print(im0.shape)
+print('Example of data:', train_data[0].shape)
+print('Example of label:',train_labels[0])
 #sys.exit()
 
 #train_data = [np.transpose(t) for t in train_data]
@@ -146,49 +159,55 @@ graph = tf.Graph() # no necessiry
 with graph.as_default():
 
 	# 1. Construct a graph representing the model.
-	bottleneck_tensor_size =  2048
+	
 	x = tf.placeholder(tf.float32, [None, 1, bottleneck_tensor_size], name='Placeholder-x') # Placeholder for input.
 	y = tf.placeholder(tf.float32, [None, 1], name='Placeholder-y')   # Placeholder for labels.
 	
 	input_bottleneck = tf.reshape(x, [-1, bottleneck_tensor_size])
 
-	output = network2(input_bottleneck, bottleneck_tensor_size)
+	output = network1(input_bottleneck, bottleneck_tensor_size)
 	print('output =', output)
 
 	# 2. Add nodes that represent the optimization algorithm.
-
-	loss = tf.reduce_mean(tf.square(output - y))	
-	#loss = tf.reduce_sum(tf.pow(output - y, 2))/(n_instances)
-	#loss = tf.reduce_mean(tf.squared_difference(output, y))
+	loss = tf.reduce_mean(tf.square(output - y))
+	#loss = tf.reduce_mean(tf.abs(1 -  tf.abs(tf.abs(output - y) - 1 ))) # 
+	#loss = tf.reduce_mean(tf.squared_difference(y, output))
 	#loss = tf.nn.l2_loss(output - y)
-
+	#loss = tf.losses.mean_squared_error(labels=y, predictions=output)
+	
 	#optimizer = tf.train.AdagradOptimizer(0.01)
 	optimizer= tf.train.AdagradOptimizer(0.005)
-	#optimizer= tf.train.AdamOptimizer(0.01)
+	#optimizer= tf.train.AdamOptimizer(0.005)
 	#train_op = tf.train.GradientDescentOptimizer(0.01)
 	train_op = optimizer.minimize(loss)
+		
+	# for classification:
+	#loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=y)
+	#train_op = tf.train.AdagradOptimizer(0.01).minimize(loss)
+	#correct_prediction = tf.equal(tf.argmax(logits,1), tf.argmax(y,1))
+	#accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+	output_angles_valid = []
 
 	# 3. Execute the graph on batches of input data.
 	with tf.Session() as sess:  # Connect to the TF runtime.
 		init = tf.global_variables_initializer()
 		sess.run(init)	# Randomly initialize weights.
-
 		for iteration in range(NUM_ITERS):			  # Train iteratively for NUM_iterationS.		 
 
-			if iteration % 5000 == 0:
+			if iteration % (50*DISPLAY_INTERVAL) == 0:
 
-				output_values = output.eval(feed_dict = {x:valid_data[:3]})
-				print('valid: {0:.2f} - {1:.2f}'.format(output_values[0][0]*360, valid_labels[0][0]*360))
-				print('valid: {0:.2f} - {1:.2f}'.format(output_values[1][0]*360, valid_labels[1][0]*360))
-
-				print('filenames:', valid['filenames'][0])
-				print('labels:', valid['labels'][0][0], '   grad=', valid['labels'][0][0]*360.0)
-				print('output:', output_values[0][0], '   grad=', output_values[0][0]*360.0)
-				print('emb:', valid['embedding'][0])
-
+				#output_values = output.eval(feed_dict = {x:train['images'][:3]})
+				#print('train: {0:.2f} - {1:.2f}'.format(output_values[0][0]*360, train['labels'][0][0]*360))
+				#print('train: {0:.2f} - {1:.2f}'.format(output_values[1][0]*360, train['labels'][1][0]*360))
+				output_values = output.eval(feed_dict = {x:valid['images'][:3]})
+				print('valid: {0:.2f} - {1:.2f}'.format(output_values[0][0]*360, valid['labels'][0][0]*360))
+				print('valid: {0:.2f} - {1:.2f}'.format(output_values[1][0]*360, valid['labels'][1][0]*360))
+				#print('valid: {0:.2f} - {1:.2f}'.format(output_values[2][0]*360, valid['labels'][2][0]*360))
+				
 				output_angles_valid = []
 				for i in range(num_valid_batches):
-					feed_dict = {x:valid_data[i*BATCH_SIZE:(i+1)*BATCH_SIZE]}
+					feed_dict = {x:valid['images'][i*BATCH_SIZE:(i+1)*BATCH_SIZE]}
 					#print(feed_dict)
 					output_values = output.eval(feed_dict=feed_dict)
 					#print(i, output_values)
@@ -196,79 +215,81 @@ with graph.as_default():
 					t = [output_values[i][0]*360.0 for i in range(output_values.shape[0])]
 					#print(t)
 					output_angles_valid += t
-				print(output_angles_valid[:min(len(valid_data),10)])
+				print(output_angles_valid[:max(len(valid),10)])
 
 
-			if iteration % 200 == 0:
+			if iteration % (5*DISPLAY_INTERVAL) == 0:
 
 				train_accuracy = np.mean( [loss.eval( \
-					feed_dict={x:train_data[i*BATCH_SIZE:(i+1)*BATCH_SIZE], \
-					y:train_labels[i*BATCH_SIZE:(i+1)*BATCH_SIZE]}) \
-					for i in range(0, num_train_batches)])
-				
+					feed_dict={x:train['images'][i*BATCH_SIZE:(i+1)*BATCH_SIZE], \
+					y:train['labels'][i*BATCH_SIZE:(i+1)*BATCH_SIZE]}) \
+					for i in range(0,num_train_batches)])
 				valid_accuracy = np.mean([ loss.eval( \
-					feed_dict={x:valid_data[i*BATCH_SIZE:(i+1)*BATCH_SIZE], \
-					y:valid_labels[i*BATCH_SIZE:(i+1)*BATCH_SIZE]}) \
-					for i in range(0, num_valid_batches)])
+					feed_dict={x:valid['images'][i*BATCH_SIZE:(i+1)*BATCH_SIZE], \
+					y:valid['labels'][i*BATCH_SIZE:(i+1)*BATCH_SIZE]}) \
+					for i in range(0,num_valid_batches)])
 
 				if valid_accuracy < min_valid_accuracy:
 					min_valid_accuracy = valid_accuracy
 
 				min_in_grad = math.sqrt(min_valid_accuracy) * 360.0
-				print('iter {0:3}: train_loss={1:0.4f}, valid_loss={2:0.4f} (min={3:0.4f} ({4:0.2f} gr.))'.\
+				#min_in_grad = min_valid_accuracy * 360.0
+				
+				print('iter {0:3}: train_loss={1:0.4f}, valid_loss={2:0.4f} (min={3:0.4f} ({4:0.2f} grad.))'.\
 					format(iteration, train_accuracy, valid_accuracy, min_valid_accuracy, min_in_grad))
 
 				"""
-				#train_accuracy = loss.eval(feed_dict = {x:train_data[0:BATCH_SIZE], y:train_labels[0:BATCH_SIZE]})
-				#valid_accuracy = loss.eval(feed_dict = {x:valid_data[0:BATCH_SIZE], y:valid_labels[0:BATCH_SIZE]})
+				#train_accuracy = loss.eval(feed_dict = {x:train['images'][0:BATCH_SIZE], y:train['labels'][0:BATCH_SIZE]})
+				#valid_accuracy = loss.eval(feed_dict = {x:valid['images'][0:BATCH_SIZE], y:valid['labels'][0:BATCH_SIZE]})
 				"""
 			
-			# TRAIN:
 			a1 = iteration*BATCH_SIZE % train['size']
 			a2 = (iteration + 1)*BATCH_SIZE % train['size']
-			x_data = train_data[a1:a2]
-			y_data = train_labels[a1:a2]
-
+			x_data = train['images'][a1:a2]
+			y_data = train['labels'][a1:a2]
 			if len(x_data) <= 0: continue
-			sess.run(train_op, 
-				feed_dict={x: x_data, y: y_data})  # Perform one training iteration.		
+			sess.run(train_op, {x: x_data, y: y_data})  # Perform one training iteration.		
+			#print(a1, a2, y_data)			
 
 		# Save the comp. graph
-
-		"""
-		x_data, y_data =  valid_data, valid_labels #mnist.train.next_batch(BATCH_SIZE)		
-		writer = tf.summary.FileWriter("output", sess.graph)
-		print(sess.run(train_op, feed_dict={x: x_data, y: y_data}))
-		writer.close()  
-		"""
+		if False:
+			print('Save the comp. graph')
+			x_data, y_data =  valid['images'], valid['labels'] #mnist.train.next_batch(BATCH_SIZE)		
+			writer = tf.summary.FileWriter("output", sess.graph)
+			print(sess.run(train_op, {x: x_data, y: y_data}))
+			writer.close()  
 
 		# Test of model
 		"""
 		HERE SOME ERROR ON GPU OCCURS
 		num_test_batches = test['size'] // BATCH_SIZE
 		test_accuracy = np.mean([ loss.eval( \
-			feed_dict={x:test_images[i*BATCH_SIZE : (i+1)*BATCH_SIZE]}) \
+			feed_dict={x:test['images'][i*BATCH_SIZE : (i+1)*BATCH_SIZE]}) \
 			for i in range(num_test_batches) ])
 		print('Test of model')
 		print('Test_accuracy={0:0.4f}'.format(test_accuracy))
 		"""
 
 		"""
-		test_accuracy = loss.eval(feed_dict={x:test_images[0:BATCH_SIZE]})
+		print('Test model')
+		test_accuracy = loss.eval(feed_dict={x:test['images'][0:BATCH_SIZE]})
 		print('Test_accuracy={0:0.4f}'.format(test_accuracy))				
 		"""
 
-		# Rotate images:
-		in_dir = 'data'
-		out_dir = 'valid'
-		file_names = valid['filenames']
-		angles = output_angles_valid
-		rotate_images_with_angles(in_dir, out_dir, file_names, angles)
+		if False:
+			# Rotate images:
+			print('Rotate images')
+			#in_dir = 'data'
+			out_dir = 'valid'
+			os.system('mkdir -p {0}'.format(out_dir))
+			angles = output_angles_valid
+			file_names = valid['filenames'][:len(angles)]
+			print('len(angles) =', len(angles))
+			print('len(file_names) =', len(file_names))
+			rotate_images_with_angles(in_dir, out_dir, file_names, angles)
 		
 		"""
 		# Saver
 		saver = tf.train.Saver()		
 		saver.save(sess, './save_model/my_test_model')  
 		"""
-
-

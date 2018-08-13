@@ -13,8 +13,15 @@ import math
 import numpy as np
 
 import tensorflow as tf
-import tensorflow_hub as hub
 import network
+
+if os.path.exists('.notebook'):
+	module = network.conv_network_224
+else:
+	import tensorflow_hub as hub
+	module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/1")		
+
+
 
 np.set_printoptions(precision=4, suppress=True)
 #import tensorflow_hub as hub
@@ -90,9 +97,7 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 	x = tf.placeholder(tf.float32, [None, height, width, 3], name='Placeholder-x')
 	resized_input_tensor = tf.reshape(x, [-1, height, width, 3])
 	#module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/classification/1")		
-	module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/1")	
-	#module = network.conv_network_224
-
+	
 		# num_features = 2048, height x width = 224 x 224 pixels
 	assert height, width == hub.get_expected_image_size(module)	
 	bottleneck_tensor = module(resized_input_tensor)  # Features with shape [batch_size, num_features]
@@ -172,6 +177,6 @@ if __name__ == '__main__':
 	in_dir = 'data'
 	out_file = 'dump.gz'
 	shape = 224, 224, 3
-	num_angles = 100
+	num_angles = 10
 	bottleneck_data = make_bottleneck_dump(in_dir=in_dir, shape=shape, num_angles=num_angles)
 	save_data_dump(bottleneck_data, out_file=out_file)
