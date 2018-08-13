@@ -13,7 +13,7 @@ import math
 import numpy as np
 
 import tensorflow as tf
-#import tensorflow_hub as hub
+import tensorflow_hub as hub
 import network
 
 np.set_printoptions(precision=4, suppress=True)
@@ -79,20 +79,18 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 	""" Calculate feature vectors for rotated images using TF.
 	"""
 	image_size = (shape[0], shape[1])
+	feature_vectors, labels, filenames = [], [], []
 
 	files = os.listdir(dir_path)
 	random.shuffle(files)
-	feature_vectors, labels, filenames = [], [], []
+	num_files = len(files)
 
 	# Calculate in TF
 	height, width, color =  shape
 	x = tf.placeholder(tf.float32, [None, height, width, 3], name='Placeholder-x')
 	resized_input_tensor = tf.reshape(x, [-1, height, width, 3])
 	#module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/classification/1")		
-	
-	module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/1")
-	
-	#module = lambda x: network.perceptron(x, shape=shape, output_size=2048)
+	module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/1")	
 	#module = network.conv_network_224
 
 		# num_features = 2048, height x width = 224 x 224 pixels
@@ -104,7 +102,7 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 		init = tf.global_variables_initializer()
 		sess.run(init)	# Randomly initialize weights.
 		
-		for file in files:
+		for index_file, file in enumerate(files):
 
 			print(file)
 			file_path = dir_path + '/' + file
@@ -122,7 +120,7 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 
 				#angle = i*30 + randint(0,29)				
 				angle = i * d_angle + randint(0, d_angle-1)
-				print('{0}: rotate of {1} degrees'.format(i, angle))
+				print('{0}/{1} - {2}: {3} deg.'.format(index_file+1, num_files, i, angle))
 
 				img_rot = img.rotate(angle)
 				box = img_rot.crop(area)
@@ -134,6 +132,8 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 				feature_vectors.append(feature_vector)
 				labels.append(label)
 				filenames.append(file_path)
+
+			img.close()
 
 	print('Number of feature_vectors: {0}'.format(len(feature_vectors)))	
 	return {'images': feature_vectors, 'labels': labels, 'filenames':filenames}
