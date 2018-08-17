@@ -4,6 +4,7 @@
 import os
 import os.path
 import sys
+import argparse
 from PIL import Image, ImageDraw
 import _pickle as pickle
 import gzip
@@ -21,9 +22,11 @@ else:
 	import tensorflow_hub as hub
 	module = hub.Module("https://tfhub.dev/google/imagenet/resnet_v2_152/feature_vector/1")		
 
-
-
 np.set_printoptions(precision=4, suppress=True)
+
+DO_MIX = False
+RANDOM_ANGLE = False
+
 #import tensorflow_hub as hub
 
 """
@@ -139,7 +142,10 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 			for i in range(0, num_angles):
 
 				#angle = i*30 + randint(0,29)				
-				angle = i * d_angle + randint(0, int(100*(d_angle))-1 ) / 100
+				if RANDOM_ANGLE:
+					angle = randint(0, 100000*360-1) / 100000
+				else:		
+					angle = i * d_angle + randint(0, int(100*(d_angle))-1 ) / 100
 				print('{0}/{1} - {2}: {3:.2f} deg.'.format(index_file+1, num_files, i, angle))
 
 				img_rot = img.rotate(angle)
@@ -159,8 +165,7 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 	
 	data = {'images': feature_vectors, 'labels': labels, 'filenames':filenames}
 
-	# mix data
-	DO_MIX = False
+	# mix data	
 	if DO_MIX:
 		print('start mix data')
 		zip3 = list(zip(data['images'], data['labels'], data['filenames']))
@@ -205,11 +210,39 @@ def save_data_dump(data, out_file):
 
 
 
+def createParser ():
+	"""
+	ArgumentParser
+	"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-n', '--num', default=100, type=int,\
+		help='num_angles for a single picture')
+	parser.add_argument('-i', '--in_dir', default=None, type=str,\
+		help='input dir')
+	parser.add_argument('-o', '--out_file', default=None, type=str,\
+		help='output file')
+	parser.add_argument('-m', '--mix', dest='mix', action='store_true')
+	parser.add_argument('-r', '--rnd', dest='rnd', action='store_true')
+	return parser
+
+
 if __name__ == '__main__':
 
-	in_dir = 'data'
-	out_file = 'dump.gz'
-	shape = 224, 224, 3
-	num_angles = 100
-	bottleneck_data = make_bottleneck_dump(in_dir=in_dir, shape=shape, num_angles=num_angles)
+	parser = createParser()
+	arguments = parser.parse_args(sys.argv[1:])			
+	NUM_ANGLES 	 = arguments.num
+	DO_MIX 		 = arguments.mix
+	RANDOM_ANGLE = arguments.rnd
+	print('NUM_ANGLES =', 	NUM_ANGLES)
+	print('DO_MIX =',		DO_MIX)
+	print('RANDOM_ANGLE =', RANDOM_ANGLE)
+
+	if not arguments.in_dir:
+		in_dir = 'data'
+	if not arguments.out_file:		
+		out_file = 'dump.gz'
+
+
+	shape = 224, 224, 3	
+	bottleneck_data = make_bottleneck_dump(in_dir=in_dir, shape=shape, num_angles=NUM_ANGLES)
 	save_data_dump(bottleneck_data, out_file=out_file)
