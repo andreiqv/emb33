@@ -160,14 +160,16 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 	data = {'images': feature_vectors, 'labels': labels, 'filenames':filenames}
 
 	# mix data
-	print('start mix data')
-	zip3 = list(zip(data['images'], data['labels'], data['filenames']))
-	random.shuffle(zip3)
-	print('mix ok')
-	data['images']    = [x[0] for x in zip3]
-	data['labels']    = [x[1] for x in zip3]
-	data['filenames'] = [x[2] for x in zip3]
-	print('data ready')
+	DO_MIX = False
+	if DO_MIX:
+		print('start mix data')
+		zip3 = list(zip(data['images'], data['labels'], data['filenames']))
+		random.shuffle(zip3)
+		print('mix ok')
+		data['images']    = [x[0] for x in zip3]
+		data['labels']    = [x[1] for x in zip3]
+		data['filenames'] = [x[2] for x in zip3]
+		print('data ready')
 
 	#for i in range(len(data['labels'])):
 	#	print('{0} - {1}'.format(data['labels'][i], data['filenames'][i]))

@@ -30,7 +30,7 @@ if os.path.exists('.notebook'):
 else:
 	bottleneck_tensor_size =  2048
 	BATCH_SIZE = 10
-	DISPLAY_INTERVAL, NUM_ITERS = 100, 500000
+	DISPLAY_INTERVAL, NUM_ITERS = 100, 5000000
 
 data_file = "dump.gz"
 f = gzip.open(data_file, 'rb')
@@ -137,7 +137,7 @@ def network1(input_tensor, input_size):
 	return f1
 
 
-def network2(input_tensor, input_size, hidden_num=512):
+def network2(input_tensor, input_size, hidden_num=8):
 
 	f1 = fullyConnectedLayer(
 		input_bottleneck, input_size=bottleneck_tensor_size, num_neurons=hidden_num, 
@@ -151,7 +151,7 @@ def network2(input_tensor, input_size, hidden_num=512):
 	return f2
 
 
-neural_network = network1
+neural_network = network2
 
 #-------------------
 
