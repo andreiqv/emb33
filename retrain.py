@@ -120,9 +120,9 @@ def createParser ():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-i', '--in_file', default="dump.gz", type=str,\
 		help='input dir')
-	parser.add_argument('-k', '--k', default=1, type=int,\
+	parser.add_argument('-k', '--k', default=2, type=int,\
 		help='number of network')
-	parser.add_argument('-hn', '--hidden_num', default=0, type=int,\
+	parser.add_argument('-hn', '--hidden_num', default=8, type=int,\
 		help='number of neurons in hiden layer')
 
 	return parser
