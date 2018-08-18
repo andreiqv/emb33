@@ -280,7 +280,7 @@ if __name__ == '__main__':
 
 					#min_in_grad = math.sqrt(min_valid_loss) * 360.0
 					
-					print('iter {0:3}: train={1:0.2f}\u00b0, valid={2:0.2f}\u00b0 (min={3:0.2f}\u00b0)'.\
+					print('iter {0:3}: train={1:0.2f}, valid={2:0.2f} (min={3:0.2f})'.\
 						format(iteration, to_deg(train_loss), to_deg(valid_loss), to_deg(min_valid_loss)))
 
 					"""
