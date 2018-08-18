@@ -36,6 +36,8 @@ else:
 	BATCH_SIZE = 10
 	DISPLAY_INTERVAL, NUM_ITERS = 100, 2000000
 
+to_deg = lambda x : math.sqrt(x) * 360.0
+
 """
 # some functions
 
@@ -192,7 +194,7 @@ if __name__ == '__main__':
 	print('num_test_batches:', num_test_batches)
 
 	SAMPLE_SIZE = train['size']
-	min_valid_accuracy = 1000
+	min_valid_loss = 1000
 
 
 	#-------------------
@@ -264,27 +266,26 @@ if __name__ == '__main__':
 
 				if iteration % (10*DISPLAY_INTERVAL) == 0:
 
-					train_accuracy = np.mean( [loss.eval( \
+					train_loss = np.mean( [loss.eval( \
 						feed_dict={x:train['images'][i*BATCH_SIZE:(i+1)*BATCH_SIZE], \
 						y:train['labels'][i*BATCH_SIZE:(i+1)*BATCH_SIZE]}) \
 						for i in range(0,num_train_batches)])
-					valid_accuracy = np.mean([ loss.eval( \
+					valid_loss = np.mean([ loss.eval( \
 						feed_dict={x:valid['images'][i*BATCH_SIZE:(i+1)*BATCH_SIZE], \
 						y:valid['labels'][i*BATCH_SIZE:(i+1)*BATCH_SIZE]}) \
 						for i in range(0,num_valid_batches)])
 
-					if valid_accuracy < min_valid_accuracy:
-						min_valid_accuracy = valid_accuracy
+					if valid_loss < min_valid_loss:
+						min_valid_loss = valid_loss
 
-					min_in_grad = math.sqrt(min_valid_accuracy) * 360.0
-					#min_in_grad = min_valid_accuracy * 360.0
+					#min_in_grad = math.sqrt(min_valid_loss) * 360.0
 					
-					print('iter {0:3}: train_loss={1:0.4f}, valid_loss={2:0.4f} (min={3:0.4f} ({4:0.2f} grad.))'.\
-						format(iteration, train_accuracy, valid_accuracy, min_valid_accuracy, min_in_grad))
+					print('iter {0:3}: train={1:0.2f}\u00b0, valid={2:0.2f}\u00b0 (min={3:0.2f}\u00b0)'.\
+						format(iteration, to_deg(train_loss), to_deg(valid_loss), to_deg(min_valid_loss)))
 
 					"""
-					#train_accuracy = loss.eval(feed_dict = {x:train['images'][0:BATCH_SIZE], y:train['labels'][0:BATCH_SIZE]})
-					#valid_accuracy = loss.eval(feed_dict = {x:valid['images'][0:BATCH_SIZE], y:valid['labels'][0:BATCH_SIZE]})
+					#train_loss = loss.eval(feed_dict = {x:train['images'][0:BATCH_SIZE], y:train['labels'][0:BATCH_SIZE]})
+					#valid_loss = loss.eval(feed_dict = {x:valid['images'][0:BATCH_SIZE], y:valid['labels'][0:BATCH_SIZE]})
 					"""
 				
 				a1 = iteration*BATCH_SIZE % train['size']
@@ -307,17 +308,17 @@ if __name__ == '__main__':
 			"""
 			HERE SOME ERROR ON GPU OCCURS
 			num_test_batches = test['size'] // BATCH_SIZE
-			test_accuracy = np.mean([ loss.eval( \
+			test_loss = np.mean([ loss.eval( \
 				feed_dict={x:test['images'][i*BATCH_SIZE : (i+1)*BATCH_SIZE]}) \
 				for i in range(num_test_batches) ])
 			print('Test of model')
-			print('Test_accuracy={0:0.4f}'.format(test_accuracy))
+			print('test_loss={0:0.4f}'.format(test_loss))
 			"""
 
 			"""
 			print('Test model')
-			test_accuracy = loss.eval(feed_dict={x:test['images'][0:BATCH_SIZE]})
-			print('Test_accuracy={0:0.4f}'.format(test_accuracy))				
+			test_loss = loss.eval(feed_dict={x:test['images'][0:BATCH_SIZE]})
+			print('test_loss={0:0.4f}'.format(test_loss))				
 			"""
 
 			if False:

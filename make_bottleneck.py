@@ -26,6 +26,7 @@ np.set_printoptions(precision=4, suppress=True)
 
 DO_MIX = False
 RANDOM_ANGLE = False
+MAX_DEGREE = 90
 
 #import tensorflow_hub as hub
 
@@ -137,14 +138,14 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 			area = (cx - a/2, cy - a/2, cx + a/2, cy + a/2)
 
 			#d_angle = int(360 / num_angles)
-			d_angle = 90 / num_angles
+			d_angle = MAX_DEGREE / num_angles
 			print('d_angle =', d_angle)
 			
 			for i in range(0, num_angles):
 
 				#angle = i*30 + randint(0,29)				
 				if RANDOM_ANGLE:
-					angle = randint(0, 100000*360-1) / 100000
+					angle = randint(0, 100000*MAX_DEGREE-1) / 100000
 				else:
 					#angle = i * d_angle + randint(0, 100*(d_angle-1)) / 100		
 					angle = i * d_angle + randint(0, int(100*(d_angle))-1 ) / 100
@@ -220,6 +221,8 @@ def createParser ():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-n', '--num', default=100, type=int,\
 		help='num_angles for a single picture')
+	parser.add_argument('-md', '--maxdeg', default=90, type=int,\
+		help='num_angles for a single picture')
 	parser.add_argument('-i', '--in_dir', default=None, type=str,\
 		help='input dir')
 	parser.add_argument('-o', '--out_file', default=None, type=str,\
@@ -236,9 +239,11 @@ if __name__ == '__main__':
 	NUM_ANGLES 	 = arguments.num
 	DO_MIX 		 = arguments.mix
 	RANDOM_ANGLE = arguments.rnd
+	MAX_DEGREE   = arguments.maxdeg
 	print('NUM_ANGLES =', 	NUM_ANGLES)
 	print('DO_MIX =',		DO_MIX)
 	print('RANDOM_ANGLE =', RANDOM_ANGLE)
+	print('MAX_DEGREE =', MAX_DEGREE)
 
 	if not arguments.in_dir:
 		in_dir = 'data'
