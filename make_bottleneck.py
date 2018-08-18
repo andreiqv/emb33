@@ -136,8 +136,8 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 			a = d*math.sqrt(2)
 			area = (cx - a/2, cy - a/2, cx + a/2, cy + a/2)
 
-			d_angle = int(360 / num_angles)
-			#d_angle = 360 / num_angles
+			#d_angle = int(360 / num_angles)
+			d_angle = 90 / num_angles
 			print('d_angle =', d_angle)
 			
 			for i in range(0, num_angles):
@@ -146,8 +146,8 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 				if RANDOM_ANGLE:
 					angle = randint(0, 100000*360-1) / 100000
 				else:
-					angle = i * d_angle + randint(0, 100*(d_angle-1)) / 100		
-					#angle = i * d_angle + randint(0, int(100*(d_angle))-1 ) / 100
+					#angle = i * d_angle + randint(0, 100*(d_angle-1)) / 100		
+					angle = i * d_angle + randint(0, int(100*(d_angle))-1 ) / 100
 				
 				print('{0}/{1} - {2}: {3:.2f} deg.'.format(index_file+1, num_files, i, angle))
 
@@ -155,7 +155,7 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 				box = img_rot.crop(area)
 				box = box.resize(image_size, Image.ANTIALIAS)
 				arr = np.array(box, dtype=np.float32) / 256
-				label = np.array([float(angle) / 360.0], dtype=np.float64)
+				label = np.array([angle / 360.0], dtype=np.float64)
 				
 				feature_vector = bottleneck_tensor.eval(feed_dict={ x : [arr] })
 				feature_vectors.append(feature_vector)
