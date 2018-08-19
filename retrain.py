@@ -34,7 +34,7 @@ if os.path.exists('.notebook'):
 else:
 	bottleneck_tensor_size =  2048
 	BATCH_SIZE = 10
-	DISPLAY_INTERVAL, NUM_ITERS = 100, 2000000
+	DISPLAY_INTERVAL, NUM_ITERS = 100, 5000000
 
 to_deg = lambda x : math.sqrt(x) * 360.0
 
@@ -279,9 +279,9 @@ if __name__ == '__main__':
 						min_valid_loss = valid_loss
 
 					#min_in_grad = math.sqrt(min_valid_loss) * 360.0
-					
-					print('iter {0:3}: train={1:0.2f}, valid={2:0.2f} (min={3:0.2f})'.\
-						format(iteration, to_deg(train_loss), to_deg(valid_loss), to_deg(min_valid_loss)))
+					epoch = iteration//(num_train_batches // BATCH_SIZE * BATCH_SIZE)
+					print('epoch {0:2} (i={1:06}): train={2:0.2f}, valid={3:0.2f} (min={4:0.2f})'.\
+						format(epoch, iteration, to_deg(train_loss), to_deg(valid_loss), to_deg(min_valid_loss)))
 
 					"""
 					#train_loss = loss.eval(feed_dict = {x:train['images'][0:BATCH_SIZE], y:train['labels'][0:BATCH_SIZE]})
