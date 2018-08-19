@@ -34,7 +34,7 @@ if os.path.exists('.notebook'):
 else:
 	bottleneck_tensor_size =  2048
 	BATCH_SIZE = 10
-	DISPLAY_INTERVAL, NUM_ITERS = 100, 5000000
+	DISPLAY_INTERVAL, NUM_ITERS = 100, 20*1000*1000
 
 to_deg = lambda x : math.sqrt(x) * 360.0
 
