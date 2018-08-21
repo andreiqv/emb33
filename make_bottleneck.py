@@ -26,7 +26,7 @@ np.set_printoptions(precision=4, suppress=True)
 
 DO_MIX = False
 RANDOM_ANGLE = False
-MAX_DEGREE = 90
+MAX_DEGREE = 360
 
 #import tensorflow_hub as hub
 
