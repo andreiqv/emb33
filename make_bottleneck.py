@@ -188,19 +188,23 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 
 def make_bottleneck_dump(in_dir, shape, num_angles):
 
+	max_valid_angles = 10 # to accelerate validation and testing
 	bottleneck_data = dict()
 	parts = ['valid', 'test', 'train']
+	
 	for part in parts:
 		print('\nProcessing {0} data'.format(part))
 		part_dir = in_dir + '/' + part
 		if part == 'train':
 			num_angles_0 = num_angles
 		else:
-			num_angles_0 = 10 if num_angles > 10 else num_angles
+			num_angles_0 = max_valid_angles if num_angles > max_valid_angles else num_angles
 		bottleneck_data[part] = create_bootleneck_data(part_dir, shape, num_angles_0)
 
-	print(len(bottleneck_data['train']['images']))
-	print(len(bottleneck_data['train']['labels']))
+	assert len(bottleneck_data['train']['labels']) == len(bottleneck_data['train']['images'])
+	print('Size of train data:', len(bottleneck_data['train']['labels']))
+	print('Size of valid data:', len(bottleneck_data['valid']['labels']))
+	print('Size of test data:',  len(bottleneck_data['test']['labels']))
 
 	return bottleneck_data
 
