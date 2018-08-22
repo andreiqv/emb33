@@ -193,7 +193,11 @@ def make_bottleneck_dump(in_dir, shape, num_angles):
 	for part in parts:
 		print('\nProcessing {0} data'.format(part))
 		part_dir = in_dir + '/' + part
-		bottleneck_data[part] = create_bootleneck_data(part_dir, shape, num_angles)
+		if part == 'train':
+			num_angles_0 = num_angles
+		else:
+			num_angles_0 = 10 if num_angles > 10 else num_angles
+		bottleneck_data[part] = create_bootleneck_data(part_dir, shape, num_angles_0)
 
 	print(len(bottleneck_data['train']['images']))
 	print(len(bottleneck_data['train']['labels']))
