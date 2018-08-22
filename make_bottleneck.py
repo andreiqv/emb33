@@ -189,7 +189,7 @@ def create_bootleneck_data(dir_path, shape, num_angles):
 def make_bottleneck_dump(in_dir, shape, num_angles):
 
 	bottleneck_data = dict()
-	parts = ['train', 'valid', 'test']
+	parts = ['valid', 'test', 'train']
 	for part in parts:
 		print('\nProcessing {0} data'.format(part))
 		part_dir = in_dir + '/' + part
